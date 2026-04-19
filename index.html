@@ -807,19 +807,19 @@
     <div class="contact-form">
       <div class="form-group">
         <label class="form-label">お名前</label>
-        <input class="form-input" type="text" placeholder="山田 太郎">
+        <input class="form-input" type="text" name="name" placeholder="山田 太郎" required>
       </div>
       <div class="form-group">
         <label class="form-label">メールアドレス</label>
-        <input class="form-input" type="email" placeholder="your@email.com">
+        <input class="form-input" type="email" name="email" placeholder="your@email.com" required>
       </div>
       <div class="form-group">
         <label class="form-label">プロジェクトの種類</label>
-        <input class="form-input" type="text" placeholder="例：コマーシャル、MV、ドキュメンタリー">
+        <input class="form-input" type="text" name="project" placeholder="例：コマーシャル、MV、ドキュメンタリー">
       </div>
       <div class="form-group">
         <label class="form-label">メッセージ</label>
-        <textarea class="form-textarea" placeholder="プロジェクトの概要・ご要望をお聞かせください"></textarea>
+        <textarea class="form-textarea" name="message" placeholder="プロジェクトの概要・ご要望をお聞かせください"></textarea>
       </div>
       <button class="form-submit" onclick="handleSubmit(event)"><span>送信する →</span></button>
       <div class="form-success" id="formSuccess">
@@ -857,12 +857,37 @@
   }, 80);
 
   // Form submit
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
-    const success = document.getElementById('formSuccess');
-    success.style.display = 'block';
-    // メール連携が必要な場合はFormspreeやGetFormのエンドポイントに差し替えてください
-    // 例: fetch('https://formspree.io/f/YOUR_ID', { method: 'POST', body: new FormData(form) })
+    const btn = e.target;
+    const form = btn.closest('.contact-form');
+    const data = new FormData();
+    data.append('name', form.querySelector('[name="name"]').value);
+    data.append('email', form.querySelector('[name="email"]').value);
+    data.append('project', form.querySelector('[name="project"]').value);
+    data.append('message', form.querySelector('[name="message"]').value);
+
+    btn.querySelector('span').textContent = '送信中...';
+    btn.disabled = true;
+
+    try {
+      const res = await fetch('https://formspree.io/f/xpqkrblv', {
+        method: 'POST',
+        body: data,
+        headers: { 'Accept': 'application/json' }
+      });
+      if (res.ok) {
+        document.getElementById('formSuccess').style.display = 'block';
+        form.querySelectorAll('input, textarea').forEach(el => el.value = '');
+        btn.querySelector('span').textContent = '送信完了 ✓';
+      } else {
+        btn.querySelector('span').textContent = 'エラーが発生しました';
+        btn.disabled = false;
+      }
+    } catch {
+      btn.querySelector('span').textContent = 'エラーが発生しました';
+      btn.disabled = false;
+    }
   }
 </script>
 </body>
